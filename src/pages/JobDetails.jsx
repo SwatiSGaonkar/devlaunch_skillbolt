@@ -1,32 +1,84 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import jobs from "../data/jobs";
-import { FaMapMarkerAlt, FaMoneyBillWave, FaBriefcase } from "react-icons/fa";
+import {
+  FaMapMarkerAlt,
+  FaMoneyBillWave,
+  FaBriefcase,
+} from "react-icons/fa";
+
+import api from "../services/api";
+
+import SaveButton from "../components/jobs/SaveButton";
+import Button from "../components/common/Button";
+import useAuth from "../hooks/useAuth";
 
 function JobDetails() {
   const { id } = useParams();
+  const { user } = useAuth();
 
-  const job = jobs.find((item) => item.id === Number(id));
+  const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [applying, setApplying] = useState(false);
+
+  useEffect(() => {
+    fetchJob();
+  }, [id]);
+
+  const fetchJob = async () => {
+    try {
+      const res = await api.get(`/jobs/${id}`);
+      setJob(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!user) {
+      alert("Please login first.");
+      return;
+    }
+
+    try {
+      setApplying(true);
+
+      const res = await api.post("/applications", {
+        userId: user.id,
+        jobId: job._id,
+      });
+
+      alert(res.data.message);
+
+    } catch (err) {
+      alert(
+        err.response?.data?.message ||
+          "Failed to apply."
+      );
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-20 text-2xl">
+        Loading...
+      </div>
+    );
+  }
 
   if (!job) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-20 text-center">
-        <h1 className="text-4xl font-bold text-red-500">
-          Job Not Found
-        </h1>
-
-        <Link
-          to="/jobs"
-          className="inline-block mt-8 bg-cyan-400 text-black px-6 py-3 rounded-lg font-semibold"
-        >
-          Back to Jobs
-        </Link>
+      <div className="text-center py-20 text-red-500 text-2xl">
+        Job Not Found
       </div>
     );
   }
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-16">
-
       <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800">
 
         <h1 className="text-4xl font-bold text-cyan-400">
@@ -41,17 +93,17 @@ function JobDetails() {
 
           <div className="flex items-center gap-3">
             <FaMapMarkerAlt className="text-cyan-400" />
-            <span>{job.location}</span>
+            {job.location}
           </div>
 
           <div className="flex items-center gap-3">
             <FaBriefcase className="text-cyan-400" />
-            <span>{job.type}</span>
+            {job.type}
           </div>
 
           <div className="flex items-center gap-3">
             <FaMoneyBillWave className="text-cyan-400" />
-            <span>{job.salary}</span>
+            {job.salary}
           </div>
 
         </div>
@@ -65,7 +117,7 @@ function JobDetails() {
             {job.skills.map((skill) => (
               <span
                 key={skill}
-                className="bg-cyan-900 text-white px-4 py-2 rounded-full"
+                className="bg-cyan-900 px-4 py-2 rounded-full"
               >
                 {skill}
               </span>
@@ -83,25 +135,29 @@ function JobDetails() {
           </p>
         </div>
 
-        <div className="mt-10 flex gap-4">
+        <div className="mt-10 grid md:grid-cols-3 gap-4">
 
-          <button
-            className="bg-cyan-400 text-black px-6 py-3 rounded-lg font-bold hover:bg-cyan-300 transition"
-          >
-            Apply Now
-          </button>
+          <SaveButton job={job} />
 
-          <Link
-            to="/jobs"
-            className="border border-cyan-400 px-6 py-3 rounded-lg hover:bg-cyan-400 hover:text-black transition"
+          <Button
+            onClick={handleApply}
+            disabled={applying}
           >
-            Back to Jobs
+            {applying ? "Applying..." : "Apply Now"}
+          </Button>
+
+          <Link to="/jobs">
+            <Button
+              variant="secondary"
+              className="w-full"
+            >
+              Back to Jobs
+            </Button>
           </Link>
 
         </div>
 
       </div>
-
     </div>
   );
 }

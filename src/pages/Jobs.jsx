@@ -1,10 +1,29 @@
-import { useState } from "react";
-import jobs from "../data/jobs";
+import { useEffect, useState } from "react";
+import api from "../services/api";
+
 import JobCard from "../components/jobs/JobCard";
 import SearchBar from "../components/jobs/SearchBar";
 
 function Jobs() {
+  const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      const res = await api.get("/jobs");
+
+      setJobs(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredJobs = jobs.filter((job) =>
     (
@@ -16,6 +35,14 @@ function Jobs() {
       .toLowerCase()
       .includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="text-center py-24 text-2xl">
+        Loading Jobs...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
@@ -33,7 +60,7 @@ function Jobs() {
 
         {filteredJobs.map((job) => (
           <JobCard
-            key={job.id}
+            key={job._id}
             job={job}
           />
         ))}

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import SaveButton from "./SaveButton";
 
 function JobCard({ job }) {
   return (
@@ -19,13 +20,9 @@ function JobCard({ job }) {
         📍 {job.location}
       </p>
 
-      <p className="mt-2">
-        {job.salary}
-      </p>
+      <p className="mt-2">{job.salary}</p>
 
-      <p className="mt-2">
-        {job.type}
-      </p>
+      <p className="mt-2">{job.type}</p>
 
       <div className="flex flex-wrap gap-2 mt-5">
         {job.skills.map((skill) => (
@@ -39,11 +36,14 @@ function JobCard({ job }) {
       </div>
 
       <Link
-        to={`/jobs/${job.id}`}
+      
+        to={`/jobs/${job._id}`}
         className="block mt-6 bg-cyan-400 text-center text-black font-semibold py-2 rounded-lg"
       >
         View Details
       </Link>
+
+      <SaveButton job={job} />
     </motion.div>
   );
 }

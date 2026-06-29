@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 import Container from "../components/common/Container";
@@ -8,7 +8,11 @@ import Input from "../components/common/Input";
 import Button from "../components/common/Button";
 import SectionTitle from "../components/common/SectionTitle";
 
+import api from "../services/api";
+
 function Register() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -18,6 +22,7 @@ function Register() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
@@ -27,14 +32,16 @@ function Register() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setError("");
+
     if (
-      !form.fullName ||
-      !form.email ||
-      !form.password ||
-      !form.confirmPassword
+      !form.fullName.trim() ||
+      !form.email.trim() ||
+      !form.password.trim() ||
+      !form.confirmPassword.trim()
     ) {
       setError("Please fill in all fields.");
       return;
@@ -45,9 +52,21 @@ function Register() {
       return;
     }
 
-    setError("");
+    try {
+      await api.post("/auth/register", {
+        name: form.fullName,
+        email: form.email,
+        password: form.password,
+        role: "student",
+      });
 
-    console.log("Register Data:", form);
+      navigate("/login");
+
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Registration failed."
+      );
+    }
   };
 
   return (
